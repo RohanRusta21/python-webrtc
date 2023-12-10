@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Meeting Code</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            background-color: #f0f0f0;
+        }
+
+        form {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 20px; /* Add margin at the bottom */
+        }
+
+        label {
+            margin-bottom: 10px;
+        }
+
+        input {
+            padding: 10px;
+            margin-bottom: 20px;
+            width: 300px;
+        }
+
+        button {
+            padding: 15px;
+            width: 150px;
+            background-color: #3498db;
+            color: #fff;
+            border: none;
+            cursor: pointer;
+            margin-bottom: 10px; /* Add margin at the bottom */
+        }
+
+        /* Style the Home button */
+        .home-button {
+            padding: 15px;
+            width: 150px;
+            background-color: #2ecc71; /* Green color */
+            color: #fff;
+            border: none;
+            cursor: pointer;
+        }
+    </style>
+    <!-- Include the script using the secure 'https' protocol -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.1.2/socket.io.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // Use the 'secure' 'https' protocol for socket connection
+            var socket = io.connect('https://' + document.domain + ':' + location.port);
+    
+            socket.on('connect', function () {
+                console.log('Socket connected');
+            });
+    
+            socket.on('code_created', function (data) {
+                document.getElementById('code-display').innerText = data.code;
+            });
+    
+            function createCode() {
+                socket.emit('create_code');
+            }
+    
+            // Use const for constant values, and ensure the button exists before adding an event listener
+            const createCodeBtn = document.getElementById('create-code-btn');
+            if (createCodeBtn) {
+                createCodeBtn.addEventListener('click', createCode);
+            }
+        });
+    </script>
+    
+</head>
+<body>
+    <h1>Create Meeting Code</h1>
+    <button id="create-code-btn">Create Code</button>
+    <p>Your Meeting Code:</p>
+    <h2 id="code-display"></h2>
+    <br>
+    <a href="/">
+        <button class="home-button">Home</button>
+    </a>
+    
+</body>
+</html>

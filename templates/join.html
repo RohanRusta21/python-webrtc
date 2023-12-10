@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Join Meeting Page</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            background-color: #f0f0f0;
+        }
+
+        form {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 20px; /* Add margin at the bottom */
+        }
+
+        label {
+            margin-bottom: 10px;
+        }
+
+        input {
+            padding: 10px;
+            margin-bottom: 20px;
+            width: 300px;
+        }
+
+        button {
+            padding: 15px;
+            width: 150px;
+            background-color: #3498db;
+            color: #fff;
+            border: none;
+            cursor: pointer;
+            margin-bottom: 10px; /* Add margin at the bottom */
+        }
+
+        /* Style the Home button */
+        .home-button {
+            padding: 15px;
+            width: 150px;
+            background-color: #2ecc71; /* Green color */
+            color: #fff;
+            border: none;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <form>
+        <label for="room-code">Room Code:</label>
+        <input type="text" id="room-code" name="room-code" required>
+
+        <label for="display-name">Display Name:</label>
+        <input type="text" id="display-name" name="display-name" required>
+
+        <button onclick="joinMeeting()">Join Meeting</button>
+    </form>
+
+    <!-- Home button is vertically aligned -->
+    <a href="/">
+        <button class="home-button">Home</button>
+    </a>
+
+    <script>
+        function joinMeeting() {
+            var roomCode = document.getElementById('room-code').value;
+            var displayName = document.getElementById('display-name').value;
+
+            // Add your logic for joining a meeting room with roomCode and displayName
+            console.log("Joining Meeting Room with Room Code: " + roomCode + " and Display Name: " + displayName);
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebRTC Video Conference</title>
+    <style>
+        #videos {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-around;
+        }
+        video {
+            max-width: 45%;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div id="videos"></div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+    <script>
+        const socket = io();
+
+        navigator.mediaDevices.getUserMedia({ video: true, audio: true })
+            .then(stream => {
+                const video = document.createElement('video');
+                video.srcObject = stream;
+                video.autoplay = true;
+                document.getElementById('videos').appendChild(video);
+
+                socket.emit('message', { type: 'user-connected', userId: socket.id });
+
+                socket.on('message', data => {
+                    if (data.type === 'user-connected' && data.userId !== socket.id) {
+                        const peerConnection = new RTCPeerConnection();
+                        stream.getTracks().forEach(track => peerConnection.addTrack(track, stream));
+                        peerConnection.createOffer()
+                            .then(offer => peerConnection.setLocalDescription(offer))
+                            .then(() => socket.emit('message', { type: 'offer', offer, userId: data.userId }));
+                    } else if (data.type === 'answer') {
+                        const peerConnection = new RTCPeerConnection();
+                        peerConnection.setRemoteDescription(new RTCSessionDescription(data.answer));
+                    } else if (data.type === 'offer') {
+                        const peerConnection = new RTCPeerConnection();
+                        stream.getTracks().forEach(track => peerConnection.addTrack(track, stream));
+                        peerConnection.setRemoteDescription(new RTCSessionDescription(data.offer))
+                            .then(() => peerConnection.createAnswer())
+                            .then(answer => peerConnection.setLocalDescription(answer))
+                            .then(() => socket.emit('message', { type: 'answer', answer, userId: data.userId }));
+                    }
+                });
+            })
+            .catch(error => console.error('Error accessing media devices:', error));
+    </script>
+</body>
+</html>
