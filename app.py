@@ -25,7 +25,7 @@ def create_code():
 def generate_random_code():
     return random.randint(10000, 99999)
 
-@app.route('/web')
+@app.route('/meet')
 def meet():
     return render_template('meet.html')
 
