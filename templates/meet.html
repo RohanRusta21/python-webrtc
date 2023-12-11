@@ -13,19 +13,77 @@
         }
         video {
             max-width: 45%;
-            margin-bottom: 20px;
+            margin-bottom: 50px;
         }
+        body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            background-color: #f0f0f0;
+        }
+
+        form {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 20px; /* Add margin at the bottom */
+        }
+
+        label {
+            margin-bottom: 10px;
+        }
+
+        input {
+            padding: 10px;
+            margin-bottom: 20px;
+            width: 300px;
+        }
+
+        button {
+            padding: 15px;
+            width: 150px;
+            background-color: #3498db;
+            color: #fff;
+            border: none;
+            cursor: pointer;
+            margin-bottom: 10px; /* Add margin at the bottom */
+        }
+
+        /* Style the Home button */
+        .home-button {
+            padding: 15px;
+            width: 150px;
+            background-color: #2ecc71; /* Green color */
+            color: #fff;
+            border: none;
+            cursor: pointer;
+        }
+    
     </style>
 </head>
 <body>
     <div id="videos"></div>
+    <button id="audioButton" onclick="toggleAudio()">Mute</button>
+    <!--<button onclick="toggleAudio()">Audio</button>-->
+    <!--<button onclick="toggleVideo()">Video</button>-->
+    <button id="videoButton" onclick="toggleVideo()">Screen off</button>
+    <a href="/">
+        <button class="home-button">Close</button>
+    </a>
+    <!--<button onclick="hangUp()">Hang Up</button>-->
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
     <script>
         const socket = io();
+        let localStream;
 
         navigator.mediaDevices.getUserMedia({ video: true, audio: true })
             .then(stream => {
+                localStream = stream;
                 const video = document.createElement('video');
                 video.srcObject = stream;
                 video.autoplay = true;
@@ -54,6 +112,35 @@
                 });
             })
             .catch(error => console.error('Error accessing media devices:', error));
+
+        /*function toggleAudio() {
+            const audioTracks = localStream.getAudioTracks();
+            audioTracks.forEach(track => track.enabled = !track.enabled);
+        }*/
+
+        function toggleAudio() {
+            const audioTracks = localStream.getAudioTracks();
+            audioTracks.forEach(track => track.enabled = !track.enabled);
+            
+            // Update button text based on the audio state
+            const audioButton = document.getElementById('audioButton');
+            audioButton.textContent = audioTracks[0].enabled ? 'Mute' : 'Unmute';
+        }
+
+        function toggleVideo() {
+            const videoTracks = localStream.getVideoTracks();
+            videoTracks.forEach(track => track.enabled = !track.enabled);
+
+            // Update button text based on the audio state
+            const videoButton = document.getElementById('videoButton');
+            videoButton.textContent = videoTracks[0].enabled ? 'Screen off' : 'Screen on';
+        }
+
+        function hangUp() {
+            localStream.getTracks().forEach(track => track.stop());
+            document.getElementById('videos').innerHTML = ''; // Clear video elements
+            socket.emit('message', { type: 'hang-up' });
+        }
     </script>
 </body>
 </html>
