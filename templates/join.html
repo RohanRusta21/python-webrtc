@@ -55,18 +55,16 @@
     </style>
 </head>
 <body>
-    <form>
+    <form onsubmit="joinMeeting()">
         <label for="room-code">Room Code:</label>
-        <input type="text" id="room-code" name="room-code" required>
+        <input type="number" id="room-code" name="room-code" placeholder="12345" required>
 
         <label for="display-name">Display Name:</label>
-        <input type="text" id="display-name" name="display-name" required>
-        </form>
-        <!--<button onclick="joinMeeting()">Join Meeting</button>-->
+        <input type="text" id="display-name" name="display-name" placeholder="John" required>
         <a href="meet">
-            <button>Join Meeting</button>
-        </a>
-    
+        <button>Join Meeting</button></a>
+    </a>
+    </form>
 
     <!-- Home button is vertically aligned -->
     <a href="/">
@@ -78,8 +76,25 @@
             var roomCode = document.getElementById('room-code').value;
             var displayName = document.getElementById('display-name').value;
 
+            // Check if roomCode is not empty and is a valid number
+            if (!roomCode || isNaN(roomCode)) {
+                alert('Room Code must be a non-empty number.');
+                return false;
+            }
+
+            // Check if displayName is a non-empty string
+            if (!displayName || !/^[a-zA-Z]+$/.test(displayName)) {
+                alert('Display Name must be a non-empty string.');
+                return false;
+            }
+
             // Add your logic for joining a meeting room with roomCode and displayName
             console.log("Joining Meeting Room with Room Code: " + roomCode + " and Display Name: " + displayName);
+
+            // Navigate to the "meet" page
+            window.location.href = "meet";
+
+            return false; // Prevent form submission
         }
     </script>
 </body>
