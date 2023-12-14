@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!-- <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -6,15 +6,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>WebRTC Video Conference</title>
     <style>
-        #videos {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: space-around;
-        }
-        video {
-            max-width: 45%;
-            margin-bottom: 50px;
-        }
         body {
             margin: 0;
             padding: 0;
@@ -26,21 +17,18 @@
             background-color: #f0f0f0;
         }
 
-        form {
+        #videos {
             display: flex;
-            flex-direction: column;
-            align-items: center;
-            margin-bottom: 20px; /* Add margin at the bottom */
+            justify-content: space-around;
+            width: 100%;
+            max-width: 1000px; /* Adjust the maximum width as needed */
         }
 
-        label {
-            margin-bottom: 10px;
-        }
-
-        input {
-            padding: 10px;
-            margin-bottom: 20px;
-            width: 300px;
+        video {
+            max-width: 45%;
+            margin-bottom: 50px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
         }
 
         button {
@@ -50,19 +38,17 @@
             color: #fff;
             border: none;
             cursor: pointer;
-            margin-bottom: 10px; /* Add margin at the bottom */
+            margin-bottom: 10px;
         }
 
-        /* Style the Home button */
         .home-button {
             padding: 15px;
             width: 150px;
-            background-color: #2ecc71; /* Green color */
+            background-color: #2ecc71;
             color: #fff;
             border: none;
             cursor: pointer;
         }
-    
     </style>
 </head>
 <body>
@@ -70,13 +56,13 @@
     <button id="audioButton" onclick="toggleAudio()">Mute</button>
     <!--<button onclick="toggleAudio()">Audio</button>-->
     <!--<button onclick="toggleVideo()">Video</button>-->
-    <button id="videoButton" onclick="toggleVideo()">Screen off</button>
+    <!--<button id="videoButton" onclick="toggleVideo()">Screen off</button>
     <a href="/">
         <button class="home-button">Close</button>
     </a>
     <!--<button onclick="hangUp()">Hang Up</button>-->
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+    <!--<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
     <script>
         const socket = io();
         let localStream;
@@ -143,4 +129,145 @@
         }
     </script>
 </body>
+</html> -->
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebRTC Video Conference</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            background-color: #f0f0f0;
+        }
+
+        .videos-container {
+            display: flex;
+            justify-content: space-around;
+            width: 100%;
+            max-width: 1000px; /* Adjust the maximum width as needed */
+        }
+
+        .video-container {
+            max-width: 45%;
+            margin-bottom: 50px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+        button {
+            padding: 15px;
+            width: 150px;
+            background-color: #3498db;
+            color: #fff;
+            border: none;
+            cursor: pointer;
+            margin-bottom: 10px;
+        }
+
+        .home-button {
+            padding: 15px;
+            width: 150px;
+            background-color: #2ecc71;
+            color: #fff;
+            border: none;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div class="videos-container" id="videos"></div>
+    <button id="audioButton" onclick="toggleAudio()">Mute</button>
+    <button id="videoButton" onclick="toggleVideo()">Screen off</button>
+    <a href="/">
+        <button class="home-button">Close</button>
+    </a>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+    <script>
+        const socket = io();
+        let localStream;
+        const peerConnections = {}; // Track peer connections
+
+        navigator.mediaDevices.getUserMedia({ video: true, audio: true })
+            .then(stream => {
+                localStream = stream;
+                const video = createVideoElement(stream, 'self');
+                document.getElementById('videos').appendChild(video);
+
+                socket.emit('message', { type: 'user-connected', userId: socket.id });
+
+                socket.on('message', data => {
+                    if (data.type === 'user-connected' && data.userId !== socket.id) {
+                        const peerConnection = createPeerConnection(data.userId, stream);
+                        peerConnection.createOffer()
+                            .then(offer => peerConnection.setLocalDescription(offer))
+                            .then(() => socket.emit('message', { type: 'offer', offer, userId: data.userId }));
+                    } else if (data.type === 'answer') {
+                        const peerConnection = getPeerConnection(data.userId);
+                        if (peerConnection) {
+                            peerConnection.setRemoteDescription(new RTCSessionDescription(data.answer));
+                        }
+                    } else if (data.type === 'offer') {
+                        const peerConnection = createPeerConnection(data.userId, stream);
+                        peerConnection.setRemoteDescription(new RTCSessionDescription(data.offer))
+                            .then(() => peerConnection.createAnswer())
+                            .then(answer => peerConnection.setLocalDescription(answer))
+                            .then(() => socket.emit('message', { type: 'answer', answer, userId: data.userId }));
+                    }
+                });
+            })
+            .catch(error => console.error('Error accessing media devices:', error));
+
+        function createPeerConnection(userId, stream) {
+            const peerConnection = new RTCPeerConnection();
+            stream.getTracks().forEach(track => peerConnection.addTrack(track, stream));
+            peerConnections[userId] = peerConnection;
+
+            const video = createVideoElement(stream, userId);
+            document.getElementById('videos').appendChild(video);
+
+            return peerConnection;
+        }
+
+        function getPeerConnection(userId) {
+            return peerConnections[userId];
+        }
+
+        function createVideoElement(stream, userId) {
+            const video = document.createElement('video');
+            video.srcObject = stream;
+            video.autoplay = true;
+            video.className = 'video-container';
+            video.setAttribute('data-user-id', userId);
+            return video;
+        }
+
+        function toggleAudio() {
+            const audioTracks = localStream.getAudioTracks();
+            audioTracks.forEach(track => track.enabled = !track.enabled);
+            const audioButton = document.getElementById('audioButton');
+            audioButton.textContent = audioTracks[0].enabled ? 'Mute' : 'Unmute';
+        }
+
+        function toggleVideo() {
+            const videoTracks = localStream.getVideoTracks();
+            videoTracks.forEach(track => track.enabled = !track.enabled);
+            const videoButton = document.getElementById('videoButton');
+            videoButton.textContent = videoTracks[0].enabled ? 'Screen off' : 'Screen on';
+        }
+    </script>
+</body>
 </html>
+
+
